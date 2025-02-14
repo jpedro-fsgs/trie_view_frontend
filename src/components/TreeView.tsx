@@ -5,6 +5,9 @@ import Tree, { RawNodeDatum } from "react-d3-tree";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 
+const API_BASE_URL = "https://api.trieview.myouijava.tech";
+// const API_BASE_URL = "http://localhost:8000";
+
 function TreeView() {
     const [dimensions, setDimensions] = useState<{
         width: number;
@@ -17,7 +20,7 @@ function TreeView() {
 
     const fetchTreeData = async () => {
         try {
-            const response = await fetch("http://localhost:8000/tree");
+            const response = await fetch(`${API_BASE_URL}/tree`);
             const data = await response.json();
             setTree(data);
         } catch (error) {
@@ -53,7 +56,7 @@ function TreeView() {
             return;
         const word = inputRef.current.value;
 
-        fetch(`http://localhost:8000/insert/${word}`, {
+        fetch(`${API_BASE_URL}/insert/${word}`, {
             method: "POST",
         })
             .then((response) => response.json())
@@ -86,6 +89,7 @@ function TreeView() {
                 inputElement.removeEventListener("keypress", handleKeyPress);
             }
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [inputRef]);
 
     return (

@@ -38,9 +38,6 @@ export const WebsocketProvider: React.FC<{ children: React.ReactNode }> = ({
         connectedUsers: 0,
     });
 
-    console.log(process.env.WS_URL);
-    console.log(process.env.API_URL);
-
     useEffect(() => {
         const ws = new WebSocket(`${process.env.WS_URL || `ws://${window.location.hostname}:8000`}/public_tree/ws`);
         setSocket(ws);

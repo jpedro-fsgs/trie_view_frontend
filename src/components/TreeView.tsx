@@ -13,6 +13,8 @@ function TreeView({ treeType }: { treeType: string }) {
         height: number;
     } | null>(null);
 
+    const [inputError, setInputError] = useState(false);
+
     const { treeData, insertTree, isConnected } = useWebsocket();
 
     useEffect(() => {
@@ -33,7 +35,11 @@ function TreeView({ treeType }: { treeType: string }) {
 
     function handleInsert() {
         const word = inputRef.current?.value;
-        if (!word || word.trim().includes(" ")) return;
+        if (!word || word.trim().includes(" ")){
+            setInputError(true);
+            setTimeout(() => setInputError(false), 1000);
+            return;
+        }
 
         insertTree(word);
 
@@ -86,7 +92,7 @@ function TreeView({ treeType }: { treeType: string }) {
                     {/* {isConnected && treeData.connectedUsers} */}
 
                 <Input
-                    className="bg-secondary p-2 rounded-l-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={cn("bg-secondary p-2 rounded-l-lg border border-gray-300", {"animate-shake": inputError})}
                     ref={inputRef}
                     disabled={!isConnected}
                     placeholder="Enter a word"

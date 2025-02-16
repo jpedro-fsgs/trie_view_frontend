@@ -1,39 +1,21 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import Tree, { RawNodeDatum } from "react-d3-tree";
+import Tree from "react-d3-tree";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
+import { TreeDataType, useWebsocket } from "@/context/WebsocketContext";
+import { cn } from "@/lib/utils";
 
-const API_BASE_URL = "https://api.trieview.myouijava.tech";
-// const API_BASE_URL = "http://localhost:8000";
-
-function TreeView() {
+function TreeView({ treeType }: { treeType: string }) {
     const [dimensions, setDimensions] = useState<{
         width: number;
         height: number;
     } | null>(null);
-    const [tree, setTree] = useState<RawNodeDatum>({
-        name: "Root",
-        children: [],
-    });
 
-    const fetchTreeData = async () => {
-        try {
-            const response = await fetch(`${API_BASE_URL}/tree`);
-            const data = await response.json();
-            setTree(data);
-        } catch (error) {
-            console.error("Error fetching tree data:", error);
-        }
-    };
+    const [inputError, setInputError] = useState(false);
 
-    useEffect(() => {
-        fetchTreeData();
-        const intervalId = setInterval(fetchTreeData, 5000);
-
-        return () => clearInterval(intervalId);
-    }, []);
+    const { treeData, insertTree, isConnected } = useWebsocket();
 
     useEffect(() => {
         const handleResize = () => {
@@ -52,24 +34,16 @@ function TreeView() {
     const inputRef = useRef<HTMLInputElement>(null);
 
     function handleInsert() {
-        if (!inputRef.current || inputRef.current.value.trim().split(" ").length > 1)
+        const word = inputRef.current?.value;
+        if (!word || word.trim().includes(" ")){
+            setInputError(true);
+            setTimeout(() => setInputError(false), 1000);
             return;
-        const word = inputRef.current.value;
+        }
 
-        fetch(`${API_BASE_URL}/insert/${word}`, {
-            method: "POST",
-        })
-            .then((response) => response.json())
-            .then((data) => {
-                setTree(data);
-                fetchTreeData();
-                inputRef.current!.value = "";
-            })
+        insertTree(word);
 
-            .catch((error) => {
-                console.error("Error inserting word:", error);
-            });
-            
+        inputRef.current!.value = "";
     }
 
     useEffect(() => {
@@ -92,18 +66,38 @@ function TreeView() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [inputRef]);
 
+    const treeTypeKey = treeType as Exclude<
+        keyof TreeDataType,
+        "connectedUsers"
+    >;
+
     return (
         <>
-            {dimensions && tree && (
+            {dimensions && treeData && (
                 <Tree
-                    data={tree}
+                    data={treeData[treeTypeKey]}
                     orientation="vertical"
                     translate={{ x: dimensions.width / 2, y: 100 }}
+                    transitionDuration={500}
                 />
             )}
-            <div className="fixed bottom-0 left-0 right-0 m-auto flex justify-center p-4 bg-white max-w-4xl shadow-lg rounded-lg">
-                <Input className="bg-secondary p-2 rounded-l-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" ref={inputRef} placeholder="Enter a word" />
-                <Button className="ml-2 p-2 rounded-r-lg bg-blue-500 text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500" variant="default" onClick={handleInsert}>
+            <div className="fixed bg-background border bottom-0 left-0 right-0 mx-2 md:mx-auto mb-2 flex justify-center items-center gap-3 p-4 max-w-4xl shadow-2xl rounded-md">
+                <div
+                    className={cn(
+                        "text-white min-w-5 min-h-5 p-1 rounded-full flex items-center justify-center",
+                        { "bg-green-600 animate-pulse": isConnected },
+                        { "bg-red-600": !isConnected }
+                    )}
+                />
+                    {/* {isConnected && treeData.connectedUsers} */}
+
+                <Input
+                    className={cn("bg-secondary p-2 rounded-l-lg border border-gray-300", {"animate-shake": inputError})}
+                    ref={inputRef}
+                    disabled={!isConnected}
+                    placeholder="Enter a word"
+                />
+                <Button variant="default" onClick={handleInsert}>
                     Insert
                 </Button>
             </div>

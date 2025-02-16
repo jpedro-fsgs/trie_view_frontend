@@ -22,13 +22,14 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
-      </body>
-    </html>
-  );
+    return (
+        <html lang="en">
+            <body className={cn("antialiased", lato.className)}>
+                <Navbar />
+                <WebsocketProvider>
+                    <main>{children}</main>
+                </WebsocketProvider>
+            </body>
+        </html>
+    );
 }

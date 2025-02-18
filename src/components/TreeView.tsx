@@ -6,6 +6,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { TreeDataType, useWebsocket } from "@/context/WebsocketContext";
 import { cn } from "@/lib/utils";
+import SearchDrawer from "./SearchDrawer";
 
 function TreeView({ treeType }: { treeType: string }) {
     const [dimensions, setDimensions] = useState<{
@@ -34,8 +35,8 @@ function TreeView({ treeType }: { treeType: string }) {
     const inputRef = useRef<HTMLInputElement>(null);
 
     function handleInsert() {
-        const word = inputRef.current?.value;
-        if (!word || word.trim().includes(" ")){
+        const word = inputRef.current?.value.trim();
+        if (!word || word.length > 15 || word.includes(" ")){
             setInputError(true);
             setTimeout(() => setInputError(false), 1000);
             return;
@@ -81,18 +82,28 @@ function TreeView({ treeType }: { treeType: string }) {
                     transitionDuration={500}
                 />
             )}
+            <SearchDrawer />
             <div className="fixed bg-background border bottom-0 left-0 right-0 mx-2 md:mx-auto mb-2 flex justify-center items-center gap-3 p-4 max-w-4xl shadow-2xl rounded-md">
-                <div
-                    className={cn(
-                        "text-white min-w-5 min-h-5 p-1 rounded-full flex items-center justify-center",
-                        { "bg-green-600 animate-pulse": isConnected },
-                        { "bg-red-600": !isConnected }
-                    )}
-                />
+                <div className="relative">
+                    <div
+                        className={cn(
+                            "min-w-4 min-h-4 p-1 rounded-full flex items-center justify-center",
+                            { "bg-green-600 animate-pulse": isConnected },
+                            { "bg-red-600": !isConnected }
+                        )}
+                    />
+                    <div
+                        className={cn(
+                            "absolute inset-0 p-1 rounded-full flex items-center justify-center",
+                            { "bg-green-600 animate-ping": isConnected },
+                            { "hidden": !isConnected }
+                        )}
+                    />
+                </div>
                     {/* {isConnected && treeData.connectedUsers} */}
 
                 <Input
-                    className={cn("bg-secondary p-2 rounded-l-lg border border-gray-300", {"animate-shake": inputError})}
+                    className={cn("bg-secondary p-2 rounded-l-lg border border-gray-300", {"animate-shake text-destructive": inputError})}
                     ref={inputRef}
                     disabled={!isConnected}
                     placeholder="Enter a word"
@@ -100,6 +111,7 @@ function TreeView({ treeType }: { treeType: string }) {
                 <Button variant="default" onClick={handleInsert}>
                     Insert
                 </Button>
+
             </div>
         </>
     );

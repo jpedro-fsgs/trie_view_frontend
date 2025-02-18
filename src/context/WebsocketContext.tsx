@@ -20,7 +20,6 @@ const WebsocketContext = createContext<WebsocketContextType | undefined>(
     undefined
 );
 
-
 export const WebsocketProvider: React.FC<{ children: React.ReactNode }> = ({
     children,
 }) => {
@@ -39,7 +38,11 @@ export const WebsocketProvider: React.FC<{ children: React.ReactNode }> = ({
     });
 
     useEffect(() => {
-        const ws = new WebSocket(`${process.env.WS_URL || `ws://${window.location.hostname}:8000`}/public_tree/ws`);
+        const ws = new WebSocket(
+            `${
+                process.env.WS_URL || `ws://${window.location.hostname}:8000`
+            }/public_tree/ws`
+        );
         setSocket(ws);
 
         ws.onmessage = (event) => {
@@ -62,14 +65,28 @@ export const WebsocketProvider: React.FC<{ children: React.ReactNode }> = ({
     }, []);
 
     function insertTree(word: string) {
-        fetch(`${process.env.API_URL || `http://${window.location.hostname}:8000`}/public_tree/insert/${word}`,
+        fetch(
+            `${
+                process.env.API_URL || `http://${window.location.hostname}:8000`
+            }/public_tree/insert/${word}`,
             {
                 method: "POST",
             }
         )
-            .then((response) => response.json())
+            .then((response) => {
+                if (!response.ok) {
+                    if (response.status === 403) {
+                        alert("Word insertion currently blocked.");
+                    } else {
+                        throw new Error(
+                            `HTTP error! Status: ${response.status}`
+                        );
+                    }
+                }
+                return response.json();
+            })
             .catch((error) => {
-                console.error("Error inserting word:", error);
+                console.error(error);
             });
     }
 
